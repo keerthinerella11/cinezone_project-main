@@ -6,17 +6,28 @@ function Favourite() {
   const [loading, setLoading] = useState(true);
 
   const userEmail = localStorage.getItem("userEmail");
-  const BACKEND_URL = import.meta.env.VITE_API_URL; // ✅ Use env variable
+  // ✅ Use env variable with fallback to render.com
+  const BACKEND_URL = import.meta.env.VITE_API_URL || "https://cinezone-project.onrender.com";
 
   useEffect(() => {
-    if (!userEmail) return;
+    if (!userEmail || !BACKEND_URL) {
+      setLoading(false);
+      return;
+    }
 
     const fetchFavourites = async () => {
       try {
         const res = await axios.get(`${BACKEND_URL}/api/favorites/${userEmail}`);
-        setFavourites(res.data);
+        // ✅ Ensure data is an array
+        if (Array.isArray(res.data)) {
+          setFavourites(res.data);
+        } else {
+          console.warn("⚠️ Favorites API returned non-array response:", res.data);
+          setFavourites([]);
+        }
       } catch (err) {
-        console.error("❌ Error fetching favourites:", err);
+        console.error("❌ Error fetching favourites:", err.message);
+        setFavourites([]); // ✅ Set empty array on error to prevent .map() crash
       } finally {
         setLoading(false);
       }
