@@ -32,7 +32,7 @@ const Home = () => {
   const fetchFavorites = async () => {
     try {
       const encodedUser = encodeURIComponent(user);
-      const res = await fetch(`${BACKEND_URL}/api/favorites/${encodedUser}`);
+      const res = await fetch(`${BACKEND_URL}/api/favorites?user=${encodedUser}`);
       if (!res.ok) {
         console.warn(`Favorites API returned ${res.status}`);
         setFavorites([]);
@@ -59,7 +59,7 @@ const Home = () => {
       setFavorites((prev) => prev.filter((id) => id !== movie.id));
       try {
         const encodedUser = encodeURIComponent(user);
-        await fetch(`${BACKEND_URL}/api/favorites/${movie.id}/${encodedUser}`, {
+        await fetch(`${BACKEND_URL}/api/favorites/${movie.id}?user=${encodedUser}`, {
           method: "DELETE",
         });
       } catch (err) {

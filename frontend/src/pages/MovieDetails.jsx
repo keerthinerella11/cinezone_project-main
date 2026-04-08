@@ -31,7 +31,8 @@ function MovieDetails() {
   useEffect(() => {
     const fetchFavorites = async () => {
       try {
-        const res = await fetch(`${BACKEND_URL}/api/favorites/${user}`);
+        const encodedUser = encodeURIComponent(user);
+        const res = await fetch(`${BACKEND_URL}/api/favorites?user=${encodedUser}`);
         if (!res.ok) {
           console.warn(`Favorites API returned ${res.status}`);
           setFavorites([]);
@@ -59,7 +60,8 @@ function MovieDetails() {
     if (isFav) {
       setFavorites((prev) => prev.filter((id) => id !== movieToLike.id));
       try {
-        await fetch(`${BACKEND_URL}/api/favorites/${movieToLike.id}/${user}`, {
+        const encodedUser = encodeURIComponent(user);
+        await fetch(`${BACKEND_URL}/api/favorites/${movieToLike.id}?user=${encodedUser}`, {
           method: "DELETE",
         });
       } catch (err) {

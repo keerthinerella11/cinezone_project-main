@@ -18,7 +18,7 @@ function Favourite() {
 
     const fetchFavourites = async () => {
       try {
-        const res = await axios.get(`${BACKEND_URL}/api/favorites/${encodedUserEmail}`);
+        const res = await axios.get(`${BACKEND_URL}/api/favorites?user=${encodedUserEmail}`);
         // ✅ Ensure data is an array
         if (Array.isArray(res.data)) {
           setFavourites(res.data);
@@ -39,7 +39,7 @@ function Favourite() {
 
   const handleRemove = async (movieId) => {
     try {
-      await axios.delete(`${BACKEND_URL}/api/favorites/${movieId}/${encodedUserEmail}`);
+      await axios.delete(`${BACKEND_URL}/api/favorites/${movieId}?user=${encodedUserEmail}`);
       setFavourites(favourites.filter((fav) => fav.movieId !== movieId));
     } catch (err) {
       console.error("❌ Error removing favourite:", err);

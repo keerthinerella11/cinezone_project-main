@@ -1,20 +1,120 @@
 import express from "express";
+import mongoose from "mongoose";
 import Favorite from "../models/Favorite.js";
 
 const router = express.Router();
 
-// ✅ Add a movie to favorites
-router.post("/", async (req, res) => {
-  try {
-    const { movieId, title, poster, rating, likedBy } = req.body;
+// ✅ Ensure DB connection
+const ensureDatabaseConnected = (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      error: "Database not connected",
+    });
+  }
+  next();
+};
 
-    if (!movieId || !likedBy) {
-      return res.status(400).json({ error: "movieId and likedBy are required" });
+// ✅ Get user from params or query safely
+const getUserFromRequest = (req) => {
+  if (req.params.user) {
+    return decodeURIComponent(String(req.params.user)).trim();
+  }
+  if (req.query.user) {
+    return String(req.query.user).trim();
+  }
+  return "";
+};
+
+// =========================
+// ✅ GET FAVORITES
+// =========================
+
+// 👉 Supports BOTH:
+// /api/favorites/:user
+// /api/favorites?user=email
+
+router.get("/", ensureDatabaseConnected, async (req, res) => {
+  try {
+    const user = getUserFromRequest(req);
+
+    if (!user) {
+      return res.status(200).json({
+        message: "Provide user email",
+        favorites: [],
+      });
     }
 
+    console.log("📥 Fetching favorites for:", user);
+
+    const favorites = await Favorite.find({
+      likedBy: { $eq: user },
+    });
+
+    console.log("✅ Found:", favorites.length);
+
+    return res.status(200).json(favorites);
+  } catch (err) {
+    console.error("❌ FULL ERROR:", err); // 🔥 IMPORTANT
+    return res.status(500).json({
+      error: "Failed to fetch favorites",
+      details: err.message,
+      favorites: [],
+    });
+  }
+});
+
+// 👉 Same logic for param route
+router.get("/:user", ensureDatabaseConnected, async (req, res) => {
+  try {
+    const user = getUserFromRequest(req);
+
+    if (!user) {
+      return res.status(400).json({
+        error: "User is required",
+        favorites: [],
+      });
+    }
+
+    console.log("📥 Fetching favorites for:", user);
+
+    const favorites = await Favorite.find({
+      likedBy: { $eq: user },
+    });
+
+    return res.status(200).json(favorites);
+  } catch (err) {
+    console.error("❌ FULL ERROR:", err);
+    return res.status(500).json({
+      error: "Failed to fetch favorites",
+      details: err.message,
+      favorites: [],
+    });
+  }
+});
+
+// =========================
+// ✅ ADD FAVORITE
+// =========================
+
+router.post("/", ensureDatabaseConnected, async (req, res) => {
+  try {
+    let { movieId, title, poster, rating, likedBy } = req.body;
+
+    if (!movieId || !likedBy) {
+      return res.status(400).json({
+        error: "movieId and likedBy are required",
+      });
+    }
+
+    likedBy = String(likedBy).trim();
+    rating = Number(rating) || 0;
+
     const existing = await Favorite.findOne({ movieId, likedBy });
+
     if (existing) {
-      return res.status(200).json({ message: "Already in favorites" });
+      return res.status(200).json({
+        message: "Already in favorites",
+      });
     }
 
     const favorite = new Favorite({
@@ -26,56 +126,55 @@ router.post("/", async (req, res) => {
     });
 
     await favorite.save();
-    return res.status(201).json({ message: "Added to favorites", favorite });
+
+    return res.status(201).json({
+      message: "Added to favorites",
+      favorite,
+    });
   } catch (err) {
-    console.error("❌ Error adding favorite:", err.message);
-    res.status(500).json({ error: "Failed to add favorite", details: err.message });
+    console.error("❌ FULL ERROR:", err);
+    return res.status(500).json({
+      error: "Failed to add favorite",
+      details: err.message,
+    });
   }
 });
 
-// ✅ Fallback for requests to /api/favorites without a user param
-router.get("/", async (req, res) => {
-  return res.json({ message: "Provide a user email in the URL: /api/favorites/:user", favorites: [] });
-});
+// =========================
+// ✅ DELETE FAVORITE
+// =========================
 
-// ✅ Get all favorites for a user
-router.get("/:user", async (req, res) => {
+router.delete("/:movieId/:user", ensureDatabaseConnected, async (req, res) => {
   try {
-    const { user } = req.params;
-    console.log(`Fetching favorites for user: ${user}`);
-    
-    if (!user || user === "undefined" || user === "null") {
-      return res.status(400).json({ error: "User parameter is required", favorites: [] });
-    }
+    const movieId = String(req.params.movieId).trim();
+    const user = getUserFromRequest(req);
 
-    const favorites = await Favorite.find({ likedBy: user });
-    console.log(`Found ${favorites.length} favorites for user: ${user}`);
-    return res.json(favorites);
-  } catch (err) {
-    console.error("❌ Error fetching favorites:", err.message);
-    res.status(500).json({ error: "Failed to fetch favorites", details: err.message, favorites: [] });
-  }
-});
-
-// ✅ Remove a movie from favorites
-router.delete("/:movieId/:user", async (req, res) => {
-  try {
-    const { movieId, user } = req.params;
-    console.log(`Removing favorite: movieId=${movieId}, user=${user}`);
-    
     if (!movieId || !user) {
-      return res.status(400).json({ error: "movieId and user are required" });
+      return res.status(400).json({
+        error: "movieId and user required",
+      });
     }
 
-    const removed = await Favorite.findOneAndDelete({ movieId, likedBy: user });
+    const removed = await Favorite.findOneAndDelete({
+      movieId,
+      likedBy: user,
+    });
+
     if (!removed) {
-      return res.status(404).json({ message: "Favorite not found" });
+      return res.status(404).json({
+        message: "Favorite not found",
+      });
     }
 
-    return res.json({ message: "Removed from favorites" });
+    return res.status(200).json({
+      message: "Removed from favorites",
+    });
   } catch (err) {
-    console.error("❌ Error removing favorite:", err.message);
-    res.status(500).json({ error: "Failed to remove favorite", details: err.message });
+    console.error("❌ FULL ERROR:", err);
+    return res.status(500).json({
+      error: "Failed to remove favorite",
+      details: err.message,
+    });
   }
 });
 
