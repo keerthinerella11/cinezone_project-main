@@ -5,7 +5,8 @@ function Favourite() {
   const [favourites, setFavourites] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const userEmail = localStorage.getItem("userEmail");
+  const userEmail = localStorage.getItem("userEmail") || "";
+  const encodedUserEmail = userEmail ? encodeURIComponent(userEmail) : "";
   // ✅ Use env variable with fallback to render.com
   const BACKEND_URL = import.meta.env.VITE_API_URL || "https://cinezone-project.onrender.com";
 
@@ -17,7 +18,7 @@ function Favourite() {
 
     const fetchFavourites = async () => {
       try {
-        const res = await axios.get(`${BACKEND_URL}/api/favorites/${userEmail}`);
+        const res = await axios.get(`${BACKEND_URL}/api/favorites/${encodedUserEmail}`);
         // ✅ Ensure data is an array
         if (Array.isArray(res.data)) {
           setFavourites(res.data);
@@ -38,7 +39,7 @@ function Favourite() {
 
   const handleRemove = async (movieId) => {
     try {
-      await axios.delete(`${BACKEND_URL}/api/favorites/${movieId}/${userEmail}`);
+      await axios.delete(`${BACKEND_URL}/api/favorites/${movieId}/${encodedUserEmail}`);
       setFavourites(favourites.filter((fav) => fav.movieId !== movieId));
     } catch (err) {
       console.error("❌ Error removing favourite:", err);

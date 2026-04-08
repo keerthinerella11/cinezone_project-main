@@ -52,6 +52,11 @@ router.get("/:user", async (req, res) => {
   }
 });
 
+// ✅ Fallback for requests to /api/favorites without a user param
+router.get("/", async (req, res) => {
+  return res.json({ message: "Provide a user email in the URL: /api/favorites/:user", favorites: [] });
+});
+
 // ✅ Remove a movie from favorites
 router.delete("/:movieId/:user", async (req, res) => {
   try {
