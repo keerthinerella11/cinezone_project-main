@@ -33,6 +33,11 @@ router.post("/", async (req, res) => {
   }
 });
 
+// ✅ Fallback for requests to /api/favorites without a user param
+router.get("/", async (req, res) => {
+  return res.json({ message: "Provide a user email in the URL: /api/favorites/:user", favorites: [] });
+});
+
 // ✅ Get all favorites for a user
 router.get("/:user", async (req, res) => {
   try {
@@ -50,11 +55,6 @@ router.get("/:user", async (req, res) => {
     console.error("❌ Error fetching favorites:", err.message);
     res.status(500).json({ error: "Failed to fetch favorites", details: err.message, favorites: [] });
   }
-});
-
-// ✅ Fallback for requests to /api/favorites without a user param
-router.get("/", async (req, res) => {
-  return res.json({ message: "Provide a user email in the URL: /api/favorites/:user", favorites: [] });
 });
 
 // ✅ Remove a movie from favorites
