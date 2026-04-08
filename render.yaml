@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: cinezone-backend
+    runtime: node
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    autoDeploy: true
