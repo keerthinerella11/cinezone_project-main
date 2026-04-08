@@ -32,12 +32,21 @@ function MovieDetails() {
     const fetchFavorites = async () => {
       try {
         const res = await fetch(`${BACKEND_URL}/api/favorites/${user}`);
+        if (!res.ok) {
+          console.warn(`Favorites API returned ${res.status}`);
+          setFavorites([]);
+          return;
+        }
         const data = await res.json();
         if (Array.isArray(data)) {
           setFavorites(data.map((fav) => fav.movieId));
+        } else {
+          console.warn("Favorites API returned non-array response:", data);
+          setFavorites([]);
         }
       } catch (err) {
         console.error("Error fetching favorites:", err);
+        setFavorites([]);
       }
     };
     fetchFavorites();

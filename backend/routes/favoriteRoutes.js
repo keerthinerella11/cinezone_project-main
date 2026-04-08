@@ -28,8 +28,8 @@ router.post("/", async (req, res) => {
     await favorite.save();
     return res.status(201).json({ message: "Added to favorites", favorite });
   } catch (err) {
-    console.error("❌ Error adding favorite:", err);
-    res.status(500).json({ error: "Failed to add favorite" });
+    console.error("❌ Error adding favorite:", err.message);
+    res.status(500).json({ error: "Failed to add favorite", details: err.message });
   }
 });
 
@@ -37,15 +37,18 @@ router.post("/", async (req, res) => {
 router.get("/:user", async (req, res) => {
   try {
     const { user } = req.params;
-    if (!user) {
-      return res.status(400).json({ error: "User parameter is required" });
+    console.log(`Fetching favorites for user: ${user}`);
+    
+    if (!user || user === "undefined" || user === "null") {
+      return res.status(400).json({ error: "User parameter is required", favorites: [] });
     }
 
     const favorites = await Favorite.find({ likedBy: user });
+    console.log(`Found ${favorites.length} favorites for user: ${user}`);
     return res.json(favorites);
   } catch (err) {
-    console.error("❌ Error fetching favorites:", err);
-    res.status(500).json({ error: "Failed to fetch favorites" });
+    console.error("❌ Error fetching favorites:", err.message);
+    res.status(500).json({ error: "Failed to fetch favorites", details: err.message, favorites: [] });
   }
 });
 
@@ -53,6 +56,8 @@ router.get("/:user", async (req, res) => {
 router.delete("/:movieId/:user", async (req, res) => {
   try {
     const { movieId, user } = req.params;
+    console.log(`Removing favorite: movieId=${movieId}, user=${user}`);
+    
     if (!movieId || !user) {
       return res.status(400).json({ error: "movieId and user are required" });
     }
@@ -64,8 +69,8 @@ router.delete("/:movieId/:user", async (req, res) => {
 
     return res.json({ message: "Removed from favorites" });
   } catch (err) {
-    console.error("❌ Error removing favorite:", err);
-    res.status(500).json({ error: "Failed to remove favorite" });
+    console.error("❌ Error removing favorite:", err.message);
+    res.status(500).json({ error: "Failed to remove favorite", details: err.message });
   }
 });
 

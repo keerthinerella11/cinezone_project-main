@@ -5,6 +5,12 @@ console.log("reviewRoutes imported");
 
 const router = express.Router();
 
+// ✅ Test route (MUST come before /:movieId)
+router.get("/test", (req, res) => {
+  console.log("Test route called");
+  res.json({ message: "Reviews API is working! ✅" });
+});
+
 // ✅ Add a review
 router.post("/", async (req, res) => {
   try {
@@ -33,21 +39,19 @@ router.post("/", async (req, res) => {
   }
 });
 
-// ✅ Get reviews for a movie
+// ✅ Get reviews for a movie (MUST come last - catches all remaining GETs)
 router.get("/:movieId", async (req, res) => {
   try {
     const { movieId } = req.params;
+    console.log(`Fetching reviews for movieId: ${movieId}`);
     const reviews = await Review.find({ movieId, isFraudulent: false }).sort({ createdAt: -1 });
+    console.log(`Found ${reviews.length} reviews for movieId: ${movieId}`);
     res.json(reviews);
   } catch (err) {
     console.error("❌ Error fetching reviews:", err);
     res.status(500).json({ message: "Failed to fetch reviews", error: err.message });
   }
 });
-
-// Test route
-console.log("adding test route");
-router.get("/test", (req, res) => res.json({message: "test"}));
 
 // Mock AI Fraud Detection Function
 async function detectFraud(comment, rating) {
