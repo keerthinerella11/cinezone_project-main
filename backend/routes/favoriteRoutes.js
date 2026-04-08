@@ -144,7 +144,7 @@ router.post("/", ensureDatabaseConnected, async (req, res) => {
 // ✅ DELETE FAVORITE
 // =========================
 
-router.delete("/:movieId/:user", ensureDatabaseConnected, async (req, res) => {
+router.delete("/:movieId", ensureDatabaseConnected, async (req, res) => {
   try {
     const movieId = String(req.params.movieId).trim();
     const user = getUserFromRequest(req);
