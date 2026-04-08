@@ -7,7 +7,7 @@ import "./Home.css";
 const API_KEY = import.meta.env.VITE_TMDB_KEY || "eeec6858ccc8ea28e5972fba3c3e55c4";
 
 // ✅ Use backend URL from env (works for Render + local)
-const BACKEND_URL = import.meta.env.VITE_API_URL || "https://cinezone-project.onrender.com";
+const BACKEND_URL = import.meta.env.VITE_API_URL || "https://cinezone-project-main.onrender.com";
 const IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
 const user = localStorage.getItem("userEmail") || "guest";
 

@@ -6,7 +6,7 @@ import "./Home.css";
 const API_KEY = import.meta.env.VITE_TMDB_KEY || "eeec6858ccc8ea28e5972fba3c3e55c4"; // TMDB key
 
 // ✅ Use Render backend URL for production, localhost for local testing
-const BACKEND_URL = import.meta.env.VITE_API_URL || "https://cinezone-project.onrender.com";
+const BACKEND_URL = import.meta.env.VITE_API_URL || "https://cinezone-project-main.onrender.com";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -59,7 +59,7 @@ const Home = () => {
       setFavorites((prev) => prev.filter((id) => id !== movie.id));
       try {
         const encodedUser = encodeURIComponent(user);
-        await fetch(`${BACKEND_URL}/api/favorites/${movie.id}?user=${encodedUser}`, {
+        await fetch(`${BACKEND_URL}/api/favorites/${movie.id}/${encodedUser}`, {
           method: "DELETE",
         });
       } catch (err) {
