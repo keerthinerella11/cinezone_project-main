@@ -75,11 +75,9 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "Server is running", database: status });
 });
 
-// ✅ Start server only after DB connection is ready
+// ✅ Start server immediately, connect DB in background
 const PORT = process.env.PORT || 5000;
-const startServer = async () => {
-  await connectDB();
-  app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-};
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 
-startServer();
+// Connect to DB asynchronously
+connectDB().catch(err => console.error("❌ DB connection failed:", err));
