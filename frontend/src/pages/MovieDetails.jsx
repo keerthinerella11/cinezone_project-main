@@ -33,7 +33,9 @@ function MovieDetails() {
       try {
         const res = await fetch(`${BACKEND_URL}/api/favorites/${user}`);
         const data = await res.json();
-        setFavorites(data.map((fav) => fav.movieId));
+        if (Array.isArray(data)) {
+          setFavorites(data.map((fav) => fav.movieId));
+        }
       } catch (err) {
         console.error("Error fetching favorites:", err);
       }
@@ -41,26 +43,68 @@ function MovieDetails() {
     fetchFavorites();
   }, []);
 
+  // ✅ Toggle Like / Unlike
+  const toggleFavorite = async (movieToLike) => {
+    const isFav = favorites.includes(movieToLike.id);
+
+    if (isFav) {
+      setFavorites((prev) => prev.filter((id) => id !== movieToLike.id));
+      try {
+        await fetch(`${BACKEND_URL}/api/favorites/${movieToLike.id}/${user}`, {
+          method: "DELETE",
+        });
+      } catch (err) {
+        console.error("Error removing favorite:", err);
+        setFavorites((prev) => [...prev, movieToLike.id]);
+      }
+    } else {
+      setFavorites((prev) => [...prev, movieToLike.id]);
+      try {
+        await fetch(`${BACKEND_URL}/api/favorites`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            movieId: movieToLike.id,
+            title: movieToLike.title,
+            poster: movieToLike.poster_path,
+            rating: movieToLike.vote_average,
+            likedBy: user,
+          }),
+        });
+      } catch (err) {
+        console.error("Error adding favorite:", err);
+        setFavorites((prev) => prev.filter((id) => id !== movieToLike.id));
+      }
+    }
+  };
+
   // ✅ Fetch reviews
   useEffect(() => {
     if (movie && movie.id) {
       const fetchReviews = async () => {
         try {
           const res = await fetch(`${BACKEND_URL}/api/reviews/${movie.id}`);
+          if (!res.ok) throw new Error("Failed to fetch reviews");
           const data = await res.json();
-          setReviews(data);
+          if (Array.isArray(data)) {
+            setReviews(data);
+          }
         } catch (err) {
           console.error("Error fetching reviews:", err);
+          setReviews([]); // Set empty array on error
         }
       };
       fetchReviews();
     }
   }, [movie]);
 
-  // ✅ Submit review
+  // ✅ Submit review (Optional - only for interested users)
   const submitReview = async (e) => {
     e.preventDefault();
-    if (!newReview.comment.trim()) return;
+    if (!newReview.comment.trim()) {
+      alert("Please write a review comment");
+      return;
+    }
 
     try {
       const res = await fetch(`${BACKEND_URL}/api/reviews`, {
@@ -73,18 +117,23 @@ function MovieDetails() {
           comment: newReview.comment,
         }),
       });
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
       const data = await res.json();
-      if (res.ok) {
+      if (data.review) {
         setReviews([data.review, ...reviews]);
         setNewReview({ rating: 5, comment: "" });
         setShowReviewForm(false);
-        alert("Review submitted! AI fraud detection checked.");
+        alert("✅ Review submitted successfully!");
       } else {
-        alert(data.message || "Failed to submit review");
+        alert("Review saved but couldn't reload reviews.");
       }
     } catch (err) {
       console.error("Error submitting review:", err);
-      alert("Something went wrong!");
+      alert("❌ Failed to submit review. Please try again.");
     }
   };
 
@@ -260,56 +309,62 @@ function MovieDetails() {
           onClick={() => setShowReviewForm(!showReviewForm)}
           style={{
             marginTop: "10px",
+            marginLeft: "10px",
             padding: "10px 20px",
             background: "#28a745",
             color: "white",
             border: "none",
             borderRadius: "5px",
             cursor: "pointer",
+            fontSize: "14px",
           }}
         >
-          {showReviewForm ? "Cancel Review" : "Write a Review"}
+          {showReviewForm ? "❌ Cancel" : "💬 Write a Review (Optional)"}
         </button>
 
         {showReviewForm && (
-          <form onSubmit={submitReview} style={{ marginTop: "20px" }}>
-            <h3>Add Your Review</h3>
-            <label>
-              Rating:
+          <form onSubmit={submitReview} style={{ marginTop: "20px", padding: "15px", backgroundColor: "#f8f9fa", borderRadius: "8px" }}>
+            <h3>📝 Share Your Review (Optional)</h3>
+            <p style={{ fontSize: "14px", color: "#666" }}>Your review helps other users discover great movies!</p>
+            <label style={{ display: "block", marginBottom: "10px" }}>
+              <strong>Rating:</strong>
               <select
                 value={newReview.rating}
                 onChange={(e) => setNewReview({ ...newReview, rating: Number(e.target.value) })}
-                style={{ marginLeft: "10px" }}
+                style={{ marginLeft: "10px", padding: "5px" }}
               >
                 {[1, 2, 3, 4, 5].map((r) => (
                   <option key={r} value={r}>
-                    {r} Star{r > 1 ? "s" : ""}
+                    {r} Star{r > 1 ? "s" : ""} {"⭐".repeat(r)}
                   </option>
                 ))}
               </select>
             </label>
-            <br />
-            <textarea
-              placeholder="Write your review..."
-              value={newReview.comment}
-              onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
-              rows="4"
-              style={{ width: "100%", marginTop: "10px" }}
-              required
-            />
+            <label style={{ display: "block", marginBottom: "10px" }}>
+              <strong>Your Review:</strong>
+              <textarea
+                placeholder="Share your thoughts about this movie..."
+                value={newReview.comment}
+                onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
+                rows="4"
+                style={{ width: "100%", marginTop: "5px", padding: "8px", fontFamily: "Arial", fontSize: "14px" }}
+                required
+              />
+            </label>
             <button
               type="submit"
               style={{
-                marginTop: "10px",
                 padding: "10px 20px",
                 background: "#007bff",
                 color: "white",
                 border: "none",
                 borderRadius: "5px",
                 cursor: "pointer",
+                fontSize: "14px",
+                fontWeight: "bold",
               }}
             >
-              Submit Review
+              ✓ Submit Review
             </button>
           </form>
         )}
