@@ -1,15 +1,19 @@
 import express from "express";
 import Review from "../models/Review.js";
 
-console.log("reviewRoutes imported");
+console.log("✅ reviewRoutes file is being loaded");
+console.log("✅ Review model imported:", !!Review);
 
 const router = express.Router();
+console.log("✅ Express router created");
 
 // ✅ Test route (MUST come before /:movieId)
 router.get("/test", (req, res) => {
-  console.log("Test route called");
+  console.log("✅ Test route called for /test");
   res.json({ message: "Reviews API is working! ✅" });
 });
+
+console.log("✅ Test route /test registered");
 
 // ✅ Add a review
 router.post("/", async (req, res) => {
@@ -59,4 +63,5 @@ async function detectFraud(comment, rating) {
   return false;
 }
 
+console.log("✅ reviewRoutes router is being exported");
 export default router;

@@ -2,6 +2,9 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
+
+console.log("📌 server.js is loading");
+
 import userRoutes from "./routes/userRoutes.js";
 import favoriteRoutes from "./routes/favoriteRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
@@ -16,8 +19,11 @@ app.use(express.json());
 
 // ✅ Routes
 app.use("/api/users", userRoutes);
+console.log("✅ User routes registered");
 app.use("/api/favorites", favoriteRoutes);
-app.use("/api/reviews", reviewRoutes); 
+console.log("✅ Favorite routes registered");
+app.use("/api/reviews", reviewRoutes);
+console.log("✅ Review routes registered"); 
 
 // ✅ Check MongoDB URI
 console.log("MONGO_URI configured:", !!process.env.MONGO_URI);
