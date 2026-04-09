@@ -144,7 +144,10 @@ router.post("/", ensureDatabaseConnected, async (req, res) => {
 // ✅ DELETE FAVORITE
 // =========================
 
-router.delete("/:movieId/:user?", ensureDatabaseConnected, async (req, res) => {
+// Handler for DELETE - supports both:
+// /api/favorites/:movieId/:user
+// /api/favorites/:movieId
+const deleteHandler = async (req, res) => {
   try {
     const movieId = String(req.params.movieId).trim();
     const user = getUserFromRequest(req);
@@ -176,6 +179,9 @@ router.delete("/:movieId/:user?", ensureDatabaseConnected, async (req, res) => {
       details: err.message,
     });
   }
-});
+};
+
+router.delete("/:movieId/:user", ensureDatabaseConnected, deleteHandler);
+router.delete("/:movieId", ensureDatabaseConnected, deleteHandler);
 
 export default router;
