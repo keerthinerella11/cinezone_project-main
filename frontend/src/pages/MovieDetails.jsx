@@ -89,25 +89,26 @@ function MovieDetails() {
     }
   };
 
-  // ✅ Fetch reviews
+  // ✅ Fetch reviews for the current movie ID as soon as the page loads
   useEffect(() => {
-    if (movie && movie.id) {
-      const fetchReviews = async () => {
-        try {
-          const res = await fetch(`${BACKEND_URL}/api/reviews/${movie.id}`);
-          if (!res.ok) throw new Error("Failed to fetch reviews");
-          const data = await res.json();
-          if (Array.isArray(data)) {
-            setReviews(data);
-          }
-        } catch (err) {
-          console.error("Error fetching reviews:", err);
-          setReviews([]); // Set empty array on error
+    if (!id) return;
+
+    const fetchReviews = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/reviews/${id}`);
+        if (!res.ok) throw new Error("Failed to fetch reviews");
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setReviews(data);
         }
-      };
-      fetchReviews();
-    }
-  }, [movie]);
+      } catch (err) {
+        console.error("Error fetching reviews:", err);
+        setReviews([]); // Set empty array on error
+      }
+    };
+
+    fetchReviews();
+  }, [id]);
 
   // ✅ Submit review (Optional - only for interested users)
   const submitReview = async (e) => {
@@ -381,7 +382,10 @@ function MovieDetails() {
         )}
 
         <div style={{ marginTop: "30px" }}>
-          <h3>Reviews</h3>
+          <h3>All User Reviews</h3>
+          <p style={{ marginBottom: "10px", color: "#555" }}>
+            Showing reviews from all users for this movie ({reviews.length} review{reviews.length === 1 ? "" : "s"}).
+          </p>
           {reviews.length === 0 ? (
             <p>No reviews yet. Be the first to review!</p>
           ) : (
@@ -393,6 +397,7 @@ function MovieDetails() {
                   padding: "10px",
                   marginBottom: "10px",
                   borderRadius: "5px",
+                  backgroundColor: "#fff",
                 }}
               >
                 <p>
